@@ -2,6 +2,7 @@ import { useState } from 'react';
 import SearchBar from './ components/SearchBar';
 import FoodList from './ components/FoodList';
 import './index.css';
+// FoodFacts Part 1 - Foundations
 
 function App() {
   const [results, setResults] = useState([]);
