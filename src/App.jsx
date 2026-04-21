@@ -1,53 +1,32 @@
-import { useState } from 'react';
-import SearchBar from './ components/SearchBar';
-import FoodList from './ components/FoodList';
-import './index.css';
+import { useReducer } from "react";
+import { Routes, Route } from "react-router-dom";
+import NavBar from "./ components/ NavBar"; // lowercase 'c', Capital 'N' and 'B'
+import HomePage from "./pages/HomePage";
+import DetailPage from "./pages/DetailPage";
+import SavedPage from "./pages/SavedPage";
+function savedReducer(state, action) {
+  switch (action.type) {
+    case 'ADD':
+      if (state.find(p => p.code === action.product.code)) return state;
+      return [...state, action.product];
+    case 'REMOVE':
+      return state.filter(p => p.code !== action.code);
+    default:
+      return state;
+  }
+}
 
 function App() {
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-
-  const handleSearch = async (query) => {
-    setLoading(true);
-    setHasSearched(true);
-
-    try {
-      const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&json=1&page_size=12`;
-      const response = await fetch(url);
-      const data = await response.json();
-
-      // Filter out items without names to keep the UI clean
-      const validProducts = data.products.filter(
-        (p) => p.product_name && p.product_name.trim() !== ''
-      );
-
-      setResults(validProducts);
-    } catch (error) {
-      console.error('Fetch error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [saved, dispatch] = useReducer(savedReducer, []);
 
   return (
-    <div className="container">
-      <header>
-        <h1>🥗 FoodFacts</h1>
-        <SearchBar onSearch={handleSearch} />
-      </header>
-
-      <main>
-        {loading && <div className="loader">Searching database...</div>}
-        
-        {!loading && !hasSearched && (
-          <p className="message">Enter a food name above to see nutrition facts.</p>
-        )}
-
-        {!loading && hasSearched && (
-          <FoodList products={results} />
-        )}
-      </main>
+    <div className="app-container">
+      <NavBar savedCount={saved.length} />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/product/:barcode" element={<DetailPage saved={saved} dispatch={dispatch} />} />
+        <Route path="/saved" element={<SavedPage saved={saved} dispatch={dispatch} />} />
+      </Routes>
     </div>
   );
 }
